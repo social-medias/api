@@ -1,4 +1,3 @@
-// Arquivo: app/index.js
 export {};
 
 function formatMetadata(lat, long, accuracy, timestamp, uriMaps) {
