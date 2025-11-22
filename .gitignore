@@ -1,0 +1,10 @@
+./README
+README
+*/*README
+
+./TODO
+TODO
+*/*TODO
+
+
+tailwind.config.js
