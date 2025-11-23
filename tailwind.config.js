@@ -8,7 +8,7 @@ module.exports = {
           success: "#10b981",
           danger: "#ef4444",
           "background-light": "#f9fafb",
-          warning: "#f9bc"
+          warning: "#f59e0b"
         }
       }
     },
