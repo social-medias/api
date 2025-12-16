@@ -1,4 +1,19 @@
 {
+  "name": "api-social",
+  "version": "1.0.0",
+  "description": "Live server for API social project",
+  "main": "server.js",
+  "scripts": {
+    "start": "node index.html",
+    "dev": "node index.html"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
   "name": "api",
   "version": "1.0.0",
   "description": "",
